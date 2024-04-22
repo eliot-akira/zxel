@@ -152,6 +152,9 @@ async function prepareRuntime() {
 
     ...(isBun ? Object.assign({}, await import('bun:sqlite')) : {}),
   })
+
+  // First command can return empty
+  globalThis.$``
 }
 
 const emph = emphasize.createEmphasize(emphasize.common)
