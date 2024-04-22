@@ -4,7 +4,7 @@
   "description": "Interactive terminal shell with zx utilities and syntax highlight for JavaScript runtimes",
   "repository": {
     "type": "git",
-    "url": "https://github.com/eliot-akira/zxel"
+    "url": "git+https://github.com/eliot-akira/zxel.git"
   },
   "homepage": "https://github.com/eliot-akira/zxel#readme",
   "type": "module",
