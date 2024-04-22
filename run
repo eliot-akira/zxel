@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+if [ -x "$(command -v bun)" ]; then
+  bun build/esm/index.js
+else
+  node build/esm/index.js
+fi

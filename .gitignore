@@ -1,0 +1,7 @@
+/build
+/debug.txt
+
+bun.lockb
+.idea
+node_modules
+package-lock.json

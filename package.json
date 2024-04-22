@@ -1,0 +1,39 @@
+{
+  "name": "zxel",
+  "version": "0.0.1",
+  "description": "Interactive terminal shell with zx utilities and syntax highlight for JavaScript runtimes",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "zxel": "run"
+  },
+  "files": [
+    "build",
+    "license",
+    "readme.md",
+    "run"
+  ],
+  "scripts": {
+    "start": "NODE_ENV=development bun --hot run index.ts",
+    "debug": "tail -f debug.txt",
+    "build": "mkdir -p build && npm run clean && npm run format && npm run build:esm && npm run build:cjs",
+    "build:cjs": "bun build.ts cjs",
+    "build:esm": "bun build.ts esm",
+    "clean": "rm -rf build/cjs/* && rm -rf build/esm/* && rm -rf build/web/*",
+    "format": "prettier --no-config --no-semi --single-quote --write index.ts",
+    "release": "npm run build && npm publish --access public"
+  },
+  "keywords": ["zx", "bun", "shell"],
+  "author": "eliot-akira",
+  "license": "MIT",
+  "dependencies": {
+    "emphasize": "^7.0.0",
+    "terminal-kit": "^3.1.1",
+    "zx": "^8.0.2"
+  },
+  "devDependencies": {
+    "@gjsify/esbuild-plugin-transform-ext": "^0.0.4",
+    "esbuild": "^0.20.2",
+    "prettier": "^3.2.5"
+  }
+}
