@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
+script_dir=$(dirname "$(readlink -f "$0")")
+
 if [ -x "$(command -v bun)" ]; then
-  bun build/esm/index.js
+  bun "$script_dir"/build/esm/index.js
 else
-  node build/esm/index.js
+  node "$script_dir"/build/esm/index.js
 fi

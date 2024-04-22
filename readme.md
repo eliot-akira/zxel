@@ -4,6 +4,14 @@
 
 ![Screenshot](screenshot.png)
 
+## Usage
+
+Prerequisites: [Node](https://nodejs.org/en/) (minimum version 18)
+
+```sh
+npx zxel
+```
+
 ## Features
 
 - Read-eval-print-loop of JavaScript expression with syntax highlight

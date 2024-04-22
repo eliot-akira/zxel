@@ -1,6 +1,6 @@
 {
   "name": "zxel",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Interactive terminal shell with zx utilities and syntax highlight for JavaScript runtimes",
   "type": "module",
   "main": "index.js",
