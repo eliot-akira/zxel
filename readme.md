@@ -1,6 +1,6 @@
 # zxel
 
-`zxel` is an interactive terminal shell with `zx` utilities and syntax highlight for JavaScript runtimes (Node/Bun).
+`zxel` is an interactive terminal shell with `zx` utilities and syntax highlight for JavaScript runtimes.
 
 ![Screenshot](screenshot.png)
 
@@ -10,6 +10,12 @@ Prerequisites: [Node](https://nodejs.org/en/) (minimum version 18)
 
 ```sh
 npx zxel
+```
+
+Alternatively, with [Bun](https://bun.sh/).
+
+```sh
+bunx zxel
 ```
 
 ## Features
@@ -26,6 +32,6 @@ npx zxel
   - `$see` (shell with output)
   - `fs`
   - `glob`
-- Runs with [Bun](https://bun.sh/) if installed
+- Runs with Bun if installed
   - `Bun`
   - `Database`
