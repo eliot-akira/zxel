@@ -9,6 +9,7 @@ import * as zx from 'zx'
  */
 
 const args = process.argv.slice(2)
+const version = '0.0.5'
 
 const inspectOptions = {
   colors: true,
@@ -117,7 +118,7 @@ async function prepareRuntime() {
         return new Error(result.stderr || `Exit code ${result.exitCode}`)
       }
 
-      return result.toString().trim()
+      return result.stdout.trim()
     },
     $see: async function (pieces: TemplateStringsArray, ...args: any[]) {
       const p = zx
@@ -503,11 +504,13 @@ term.on('key', async (name, matches, data) => {
   // })
 })
 
-setPrompt('\x1B[033\x1B[01;34mzx\x1B[033\x1B[01;30m>\x1B[033\x1B[00m ')
+setPrompt('\x1B[033\x1B[34mzx\x1B[30m>\x1B[00m ')
 
-console.log('\x1b[1;32mzxel\x1B[00m - Interactive JavaScript runtime shell')
 console.log(
-  '\x1b[2;37mEnter code to run, or "help" to see commands\nAssign variables like: this.a = 123\x1B[00m',
+  `\x1b[1;32mzxel\x1b[1;37m ${version} - Interactive JavaScript runtime shell`,
+)
+console.log(
+  'Enter code to run, or "help" to see commands\nAssign variables like: this.a = 123\x1B[00m',
 )
 
 prepareRuntime().then(() => {

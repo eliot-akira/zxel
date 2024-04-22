@@ -1,6 +1,7 @@
 import esbuild from 'esbuild'
 import fs from 'node:fs/promises'
 import { transformExtPlugin } from '@gjsify/esbuild-plugin-transform-ext'
+import { version } from './package.json'
 
 const args = process.argv.slice(2)
 let command = args.shift() || 'build'
@@ -11,7 +12,12 @@ if (isDev) command = args.shift() // Optional: cjs, esm, web
 ;(async () => {
 
   // const { name } = JSON.parse(await fs.readFile('./package.json'))
-  const name = 'zip-stream'
+  const name = 'zxel'
+
+  await fs.writeFile('index.ts',
+    (await fs.readFile('index.ts', 'utf8'))
+      .replace(/const version = '[0-9]+\.[0-9]+\.[0-9]+'/, `const version = '${version}'`)
+  )
 
   const esbuildOptions = {
     // entryPoints: [
