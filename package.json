@@ -1,7 +1,7 @@
 {
   "name": "zxel",
-  "version": "0.0.5",
-  "description": "Interactive terminal shell with zx utilities and syntax highlight for JavaScript runtimes",
+  "version": "0.0.6",
+  "description": "Interactive terminal shell for JavaScript runtimes with syntax highlight and zx utilities",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/eliot-akira/zxel.git"
