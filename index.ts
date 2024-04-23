@@ -4,12 +4,8 @@ import * as emphasize from 'emphasize'
 import * as termKit from 'terminal-kit'
 import * as zx from 'zx'
 
-/**
- * ANSI Escape Sequences - https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797
- */
-
 const args = process.argv.slice(2)
-const version = '0.0.5'
+const version = '0.0.6'
 
 const inspectOptions = {
   colors: true,
@@ -18,48 +14,50 @@ const inspectOptions = {
 const inspect = (value) => _inspect(value, inspectOptions)
 
 const isDev = process.env.NODE_ENV === 'development'
-const debugStream =
-isDev
-    ? fs.createWriteStream('debug.txt')
-    : {
-        write() {},
-        close() {},
-      }
+const debugStream = isDev
+  ? fs.createWriteStream('debug.txt')
+  : {
+      write() {},
+      close() {},
+    }
 
-const log = (str: string) => isDev ? debugStream.write(str) : null
+const log = (str: string) => (isDev ? debugStream.write(str) : null)
 
 const run = async (code: string) => {
   return await eval(`(async function() { ${code} }).bind(global)()`)
 }
 
-function runCode(code: string) {
+function runCode(code: string, timeout = 0) {
   return new Promise((resolve, reject) => {
-
-    // TODO: Make timeout optional
-    // const timer = setTimeout(() => reject(new Error('Timeout')), 3000)
+    // Optional timeout
+    let timer
+    if (timeout) {
+      timer = setTimeout(() => reject(new Error('Timeout')), timeout)
+    }
 
     // TODO: Parse code and determine if code has valid syntax for expression
 
     ;(async () => {
       // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements
       const isExpression = !code.match(
-        /;|\n|const |for |if |let |var |while |try /g
+        /;|\n|const |for |if |let |var |while |try /g,
       )
 
       try {
         const result = await run(isExpression ? `return ${code}` : code)
-        // clearTimeout(timer)
+        timer && clearTimeout(timer)
         resolve(result)
       } catch (e) {
         if (!isExpression) {
-          // clearTimeout(timer)
+          timer && clearTimeout(timer)
           reject(e)
           return
         }
         // Check if syntax error?
-        // console.log(e)
-        run(code).then(resolve).catch(reject)
-        // .finally(() => clearTimeout(timer))
+        run(code)
+          .then(resolve)
+          .catch(reject)
+          .finally(() => timer && clearTimeout(timer))
       }
     })().catch(console.error)
   })
@@ -156,7 +154,15 @@ async function prepareRuntime() {
       }),
     exit: () => process.exit(),
 
-    ...(isBun ? Object.assign({}, await import('bun:sqlite')) : {}),
+    ...(isBun
+      ? Object.assign(
+          {
+            // Override zx.fetch with Bun native
+            fetch: globalThis.fetch,
+          },
+          await import('bun:sqlite'),
+        )
+      : {}),
   })
 
   // First command can return empty
@@ -202,7 +208,6 @@ function setPrompt(str) {
 }
 
 async function showPrompt() {
-
   // term('\n')
   Object.assign(startPosition, await term.getCursorLocation())
 
@@ -223,7 +228,7 @@ async function showPrompt() {
 
 function calculateCursorPosition(
   index: number = bufferCursorIndex,
-  relative: boolean = false
+  relative: boolean = false,
 ): {
   x: number
   y: number
@@ -271,7 +276,7 @@ async function updateLine() {
     1, // startPosition.x,
     startPosition.y,
     term.width,
-    endPosition.y - startPosition.y + 1
+    endPosition.y - startPosition.y + 1,
   )
 
   term.hideCursor(true)
@@ -311,7 +316,7 @@ async function updateLine() {
       JSON.stringify(startPosition) +
       ' ~ ' +
       JSON.stringify(endPosition) +
-      '\n'
+      '\n',
   )
 
   const cursor = calculateCursorPosition()
@@ -324,7 +329,7 @@ async function updateLine() {
       JSON.stringify(calculateCursorPosition()) +
       ' = ' +
       JSON.stringify(bufferCursorIndex) +
-      '\n'
+      '\n',
   )
 }
 
@@ -352,7 +357,7 @@ term.on('key', async (name, matches, data) => {
     return
   }
 
-  log(JSON.stringify([name, data]) + '\n')
+  // log(JSON.stringify([name, data]) + '\n')
 
   switch (name) {
     case 'CTRL_C':
@@ -393,10 +398,13 @@ term.on('key', async (name, matches, data) => {
       term('\n')
 
       if (buffer === 'help') {
-        console.log(`Available commands`)
-        console.log(`clear - Clear screen`)
-        console.log(`exit - Exit`)
-        console.log(`help - Show this help screen`)
+        console.log(`Available commands
+
+clear - Clear screen
+exit - Exit
+help - Show this help screen
+
+Documentation: https://github.com/eliot-akira/zxel`)
         buffer = ''
         showPrompt()
         return
@@ -410,18 +418,16 @@ term.on('key', async (name, matches, data) => {
         return
       }
 
-      // console.log('Run:', buffer)
       history.push(buffer)
       history.splice(100, history.length - 100)
       historyCursor = history.length
 
-      log(`EVAL: ${buffer}\n`)
+      // log(`EVAL: ${buffer}\n`)
       // log(`HISTORY: ${JSON.stringify(history)}\n`)
 
       try {
         const result = await runCode(buffer)
         if (result) {
-          // term(result + '\n')
           console.log(typeof result === 'object' ? inspect(result) : result)
         }
       } catch (e) {
@@ -442,9 +448,7 @@ term.on('key', async (name, matches, data) => {
       }
       break
     case 'DOWN':
-      log(
-        `DOWN: ${historyCursor + 1} ? ${history[historyCursor + 1]}\n`
-      )
+      // log(`DOWN: ${historyCursor + 1} ? ${history[historyCursor + 1]}\n`)
 
       if (history.length === 0) return
 
@@ -465,7 +469,7 @@ term.on('key', async (name, matches, data) => {
         // updateLine()
         const cursor = calculateCursorPosition()
         term.moveTo(cursor.x, cursor.y)
-        log(`LEFT: ${JSON.stringify(cursor)}\n`)
+        // log(`LEFT: ${JSON.stringify(cursor)}\n`)
       }
       break
 
@@ -475,14 +479,15 @@ term.on('key', async (name, matches, data) => {
         // updateLine()
         const cursor = calculateCursorPosition()
         term.moveTo(cursor.x, cursor.y)
-        log(`RIGHT: ${JSON.stringify(cursor)}\n`)
+        // log(`RIGHT: ${JSON.stringify(cursor)}\n`)
       }
       break
     case 'CTRL_LEFT':
+    case 'CTRL_B':
       // Backward one word
       if (bufferCursorIndex > 0) {
-        const match = /([\w_-]+|\s+)$/.exec(
-          buffer.slice(0, bufferCursorIndex) // Match to the left only
+        const match = /([\w_-]+|\s+|[^A-Za-z0-9_\s]+)$/.exec(
+          buffer.slice(0, bufferCursorIndex), // Match to the left only
         )
         if (match) {
           bufferCursorIndex = match.index
@@ -496,11 +501,12 @@ term.on('key', async (name, matches, data) => {
       }
       break
     case 'CTRL_RIGHT':
+    case 'CTRL_F':
       // Forward one word
       {
         let currentIndex = bufferCursorIndex
-        const match = /^([\w_-]+|\s+)/d.exec(
-          buffer.slice(bufferCursorIndex) // Match to the right only
+        const match = /^([\w_-]+|\s+|[^A-Za-z0-9_\s]+)/d.exec(
+          buffer.slice(bufferCursorIndex), // Match to the right only
         )
         if (match && match.indices && match.indices[0]) {
           // log(`FIND END OF WORD: ${JSON.stringify(match.indices)}\nFrom: ${buffer.slice(match.index)}\n`)
@@ -548,21 +554,13 @@ term.on('key', async (name, matches, data) => {
   }
 
   // log(JSON.stringify({ name, ...data }))
-  // term.getCursorLocation().then(({ x, y }) => {
-  //   console.log(name, data, term.width, 'x', term.height, `(${x}, ${y})`)
-  // })
 })
 
-setPrompt('\x1B[033\x1B[34mzx\x1B[30m>\x1B[00m ')
-
-console.log(
-  `\x1b[1;32mzxel\x1b[1;37m ${version} - Interactive JavaScript runtime shell`
-)
-console.log(
-  'Enter code to run, or "help" to see commands\nAssign variables like: this.a = 123\x1B[00m'
-)
+console.log(`\x1b[1;32mzxel\x1b[1;37m ${version} - Interactive JavaScript runtime shell
+Enter code to run, "help" to see commands, or "exit"\x1B[0m`)
 
 prepareRuntime().then(() => {
   term.grabInput(true)
+  setPrompt('\x1B[033\x1B[34mzx\x1B[30m>\x1B[00m ')
   showPrompt()
 })
