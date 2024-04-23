@@ -17,44 +17,49 @@ const inspectOptions = {
 }
 const inspect = (value) => _inspect(value, inspectOptions)
 
+const isDev = process.env.NODE_ENV === 'development'
 const debugStream =
-  process.env.NODE_ENV === 'development'
+isDev
     ? fs.createWriteStream('debug.txt')
     : {
         write() {},
         close() {},
       }
 
+const log = (str: string) => isDev ? debugStream.write(str) : null
+
 const run = async (code: string) => {
-  const result = await eval(`(async function() { ${code} }).bind(global)()`)
-  // console.log(typeof result === 'object' ? inspect(result) : result)
-  return result
+  return await eval(`(async function() { ${code} }).bind(global)()`)
 }
 
 function runCode(code: string) {
   return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Timeout')), 3000)
+
+    // TODO: Make timeout optional
+    // const timer = setTimeout(() => reject(new Error('Timeout')), 3000)
+
     // TODO: Parse code and determine if code has valid syntax for expression
 
     ;(async () => {
-      const isExpression = !code.includes(';')
+      // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements
+      const isExpression = !code.match(
+        /;|\n|const |for |if |let |var |while |try /g
+      )
 
       try {
         const result = await run(isExpression ? `return ${code}` : code)
-        clearTimeout(timer)
+        // clearTimeout(timer)
         resolve(result)
       } catch (e) {
         if (!isExpression) {
-          clearTimeout(timer)
+          // clearTimeout(timer)
           reject(e)
           return
         }
         // Check if syntax error?
         // console.log(e)
-        run(code)
-          .then(resolve)
-          .catch(reject)
-          .finally(() => clearTimeout(timer))
+        run(code).then(resolve).catch(reject)
+        // .finally(() => clearTimeout(timer))
       }
     })().catch(console.error)
   })
@@ -101,7 +106,7 @@ async function prepareRuntime() {
       const p = zx
         .$(pieces, ...args)
         .nothrow()
-        .timeout('5s')
+        // .timeout('5s')
         .stdio('pipe', 'pipe', 'pipe')
         .quiet()
 
@@ -124,7 +129,7 @@ async function prepareRuntime() {
       const p = zx
         .$(pieces, ...args)
         .nothrow()
-        .timeout('5s')
+        // .timeout('5s')
         .stdio('pipe', 'pipe', 'pipe')
 
       // bypassKeyPress = function (key) {
@@ -160,7 +165,7 @@ async function prepareRuntime() {
 
 const emph = emphasize.createEmphasize(emphasize.common)
 
-debugStream.write('\n')
+log('\n')
 
 process.on('beforeExit', () => {
   debugStream.close()
@@ -197,12 +202,13 @@ function setPrompt(str) {
 }
 
 async function showPrompt() {
+
   // term('\n')
   Object.assign(startPosition, await term.getCursorLocation())
 
   // Remember position before prompt start
   // term(JSON.stringify({ x, y }) + '\n')
-  debugStream.write('Prompt start: ' + JSON.stringify(startPosition) + '\n')
+  log('Prompt start: ' + JSON.stringify(startPosition) + '\n')
 
   term(prompt)
 
@@ -217,7 +223,7 @@ async function showPrompt() {
 
 function calculateCursorPosition(
   index: number = bufferCursorIndex,
-  relative: boolean = false,
+  relative: boolean = false
 ): {
   x: number
   y: number
@@ -250,7 +256,7 @@ function calculateCursorPosition(
     y,
   }
 
-  //   debugStream.write(`Cursor from index: ${index} = (${col} / ${term.width}, ${row}) = [${
+  //   log(`Cursor from index: ${index} = (${col} / ${term.width}, ${row}) = [${
   //   startPosition.x + col
   // }, ${ startPosition.y + row }]`)
 
@@ -260,12 +266,12 @@ function calculateCursorPosition(
 async function updateLine() {
   const output = buffer ? emph.highlight('js', buffer).value : ''
 
-  // * .eraseArea(x,y,[width],[height]): a handy higher level method that erases a rectangular
+  // Erase current block
   term.eraseArea(
-    startPosition.x,
+    1, // startPosition.x,
     startPosition.y,
     term.width,
-    endPosition.y - startPosition.y + 1,
+    endPosition.y - startPosition.y + 1
   )
 
   term.hideCursor(true)
@@ -285,7 +291,7 @@ async function updateLine() {
   const endRow = startPosition.y + relativeEndPosition.y
   if (endRow >= term.height) {
     const diff = term.height - endRow
-    debugStream.write(`Scroll: ${diff}\n`)
+    log(`Scroll: ${diff}\n`)
     startPosition.y += diff
 
     /**
@@ -300,12 +306,12 @@ async function updateLine() {
 
   Object.assign(endPosition, await term.getCursorLocation())
 
-  debugStream.write(
+  log(
     'DRAW ' +
       JSON.stringify(startPosition) +
       ' ~ ' +
       JSON.stringify(endPosition) +
-      '\n',
+      '\n'
   )
 
   const cursor = calculateCursorPosition()
@@ -313,12 +319,12 @@ async function updateLine() {
   term.moveTo(cursor.x, cursor.y)
   term.hideCursor(false)
 
-  debugStream.write(
+  log(
     'CURSOR ' +
       JSON.stringify(calculateCursorPosition()) +
       ' = ' +
       JSON.stringify(bufferCursorIndex) +
-      '\n',
+      '\n'
   )
 }
 
@@ -346,7 +352,7 @@ term.on('key', async (name, matches, data) => {
     return
   }
 
-  debugStream.write(JSON.stringify([name, data]) + '\n')
+  log(JSON.stringify([name, data]) + '\n')
 
   switch (name) {
     case 'CTRL_C':
@@ -409,8 +415,8 @@ term.on('key', async (name, matches, data) => {
       history.splice(100, history.length - 100)
       historyCursor = history.length
 
-      debugStream.write(`EVAL: ${buffer}\n`)
-      // debugStream.write(`HISTORY: ${JSON.stringify(history)}\n`)
+      log(`EVAL: ${buffer}\n`)
+      // log(`HISTORY: ${JSON.stringify(history)}\n`)
 
       try {
         const result = await runCode(buffer)
@@ -436,8 +442,8 @@ term.on('key', async (name, matches, data) => {
       }
       break
     case 'DOWN':
-      debugStream.write(
-        `DOWN: ${historyCursor + 1} ? ${history[historyCursor + 1]}\n`,
+      log(
+        `DOWN: ${historyCursor + 1} ? ${history[historyCursor + 1]}\n`
       )
 
       if (history.length === 0) return
@@ -459,7 +465,7 @@ term.on('key', async (name, matches, data) => {
         // updateLine()
         const cursor = calculateCursorPosition()
         term.moveTo(cursor.x, cursor.y)
-        debugStream.write(`LEFT: ${JSON.stringify(cursor)}\n`)
+        log(`LEFT: ${JSON.stringify(cursor)}\n`)
       }
       break
 
@@ -469,36 +475,79 @@ term.on('key', async (name, matches, data) => {
         // updateLine()
         const cursor = calculateCursorPosition()
         term.moveTo(cursor.x, cursor.y)
-        debugStream.write(`RIGHT: ${JSON.stringify(cursor)}\n`)
+        log(`RIGHT: ${JSON.stringify(cursor)}\n`)
+      }
+      break
+    case 'CTRL_LEFT':
+      // Backward one word
+      if (bufferCursorIndex > 0) {
+        const match = /([\w_-]+|\s+)$/.exec(
+          buffer.slice(0, bufferCursorIndex) // Match to the left only
+        )
+        if (match) {
+          bufferCursorIndex = match.index
+          // log(`FIND START OF WORD: ${JSON.stringify(match)}\nFrom: ${buffer.slice(match.index)}\n`)
+        } else {
+          // No word found
+          bufferCursorIndex--
+        }
+        const cursor = calculateCursorPosition()
+        term.moveTo(cursor.x, cursor.y)
+      }
+      break
+    case 'CTRL_RIGHT':
+      // Forward one word
+      {
+        let currentIndex = bufferCursorIndex
+        const match = /^([\w_-]+|\s+)/d.exec(
+          buffer.slice(bufferCursorIndex) // Match to the right only
+        )
+        if (match && match.indices && match.indices[0]) {
+          // log(`FIND END OF WORD: ${JSON.stringify(match.indices)}\nFrom: ${buffer.slice(match.index)}\n`)
+
+          // Move to end of matched word
+          const [start, end] = match.indices[0]
+          bufferCursorIndex = bufferCursorIndex + end
+        } else {
+          // No word found
+          if (bufferCursorIndex < buffer.length) {
+            bufferCursorIndex++
+          }
+        }
+
+        if (currentIndex !== bufferCursorIndex) {
+          const cursor = calculateCursorPosition()
+          term.moveTo(cursor.x, cursor.y)
+        }
       }
       break
 
-    case 'CTRL_LEFT':
     case 'CTRL_A':
+    case 'HOME':
       {
         bufferCursorIndex = 0
         const cursor = calculateCursorPosition()
         term.moveTo(cursor.x, cursor.y)
       }
       break
-    case 'CTRL_RIGHT':
     case 'CTRL_E':
+    case 'END':
       {
         bufferCursorIndex = buffer.length
         const cursor = calculateCursorPosition()
         term.moveTo(cursor.x, cursor.y)
       }
       break
-    case 'CTRL_R':
+    case 'CTRL_L': // Standard
+    case 'CTRL_R': // Backward compatibility - Usually this is search
       clearScreen()
       break
 
     default:
       break
   }
-  if (name === 'CTRL_C') process.exit()
 
-  // console.log(JSON.stringify({ name, ...data }))
+  // log(JSON.stringify({ name, ...data }))
   // term.getCursorLocation().then(({ x, y }) => {
   //   console.log(name, data, term.width, 'x', term.height, `(${x}, ${y})`)
   // })
@@ -507,10 +556,10 @@ term.on('key', async (name, matches, data) => {
 setPrompt('\x1B[033\x1B[34mzx\x1B[30m>\x1B[00m ')
 
 console.log(
-  `\x1b[1;32mzxel\x1b[1;37m ${version} - Interactive JavaScript runtime shell`,
+  `\x1b[1;32mzxel\x1b[1;37m ${version} - Interactive JavaScript runtime shell`
 )
 console.log(
-  'Enter code to run, or "help" to see commands\nAssign variables like: this.a = 123\x1B[00m',
+  'Enter code to run, or "help" to see commands\nAssign variables like: this.a = 123\x1B[00m'
 )
 
 prepareRuntime().then(() => {
