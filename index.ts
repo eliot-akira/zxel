@@ -40,7 +40,7 @@ function runCode(code: string, timeout = 0) {
     ;(async () => {
       // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements
       const isExpression = !code.match(
-        /;|\n|const |for |if |let |var |while |try /g,
+        /;|\n|const |for |if |let |var |while |try /g
       )
 
       try {
@@ -160,7 +160,7 @@ async function prepareRuntime() {
             // Override zx.fetch with Bun native
             fetch: globalThis.fetch,
           },
-          await import('bun:sqlite'),
+          await import('bun:sqlite')
         )
       : {}),
   })
@@ -228,7 +228,7 @@ async function showPrompt() {
 
 function calculateCursorPosition(
   index: number = bufferCursorIndex,
-  relative: boolean = false,
+  relative: boolean = false
 ): {
   x: number
   y: number
@@ -276,7 +276,7 @@ async function updateLine() {
     1, // startPosition.x,
     startPosition.y,
     term.width,
-    endPosition.y - startPosition.y + 1,
+    endPosition.y - startPosition.y + 1
   )
 
   term.hideCursor(true)
@@ -316,7 +316,7 @@ async function updateLine() {
       JSON.stringify(startPosition) +
       ' ~ ' +
       JSON.stringify(endPosition) +
-      '\n',
+      '\n'
   )
 
   const cursor = calculateCursorPosition()
@@ -329,7 +329,7 @@ async function updateLine() {
       JSON.stringify(calculateCursorPosition()) +
       ' = ' +
       JSON.stringify(bufferCursorIndex) +
-      '\n',
+      '\n'
   )
 }
 
@@ -403,6 +403,7 @@ term.on('key', async (name, matches, data) => {
 clear - Clear screen
 exit - Exit
 help - Show this help screen
+version - Show version
 
 Documentation: https://github.com/eliot-akira/zxel`)
         buffer = ''
@@ -415,6 +416,9 @@ Documentation: https://github.com/eliot-akira/zxel`)
         return
       } else if (buffer === 'exit') {
         process.exit()
+        return
+      } else if (buffer === 'version') {
+        console.log('Version', version)
         return
       }
 
@@ -487,7 +491,7 @@ Documentation: https://github.com/eliot-akira/zxel`)
       // Backward one word
       if (bufferCursorIndex > 0) {
         const match = /([\w_-]+|\s+|[^A-Za-z0-9_\s]+)$/.exec(
-          buffer.slice(0, bufferCursorIndex), // Match to the left only
+          buffer.slice(0, bufferCursorIndex) // Match to the left only
         )
         if (match) {
           bufferCursorIndex = match.index
@@ -506,7 +510,7 @@ Documentation: https://github.com/eliot-akira/zxel`)
       {
         let currentIndex = bufferCursorIndex
         const match = /^([\w_-]+|\s+|[^A-Za-z0-9_\s]+)/d.exec(
-          buffer.slice(bufferCursorIndex), // Match to the right only
+          buffer.slice(bufferCursorIndex) // Match to the right only
         )
         if (match && match.indices && match.indices[0]) {
           // log(`FIND END OF WORD: ${JSON.stringify(match.indices)}\nFrom: ${buffer.slice(match.index)}\n`)
@@ -556,8 +560,8 @@ Documentation: https://github.com/eliot-akira/zxel`)
   // log(JSON.stringify({ name, ...data }))
 })
 
-console.log(`\x1b[1;32mzxel\x1b[1;37m ${version} - Interactive JavaScript runtime shell
-Enter code to run, "help" to see commands, or "exit"\x1B[0m`)
+console.log(`\x1b[1;32mzxel\x1b[1;37m - Interactive JavaScript runtime shell
+\x1b[2;37mEnter code to run, "help" to see commands, or "exit"\x1B[0m`)
 
 prepareRuntime().then(() => {
   term.grabInput(true)
