@@ -14,8 +14,9 @@ if (isDev) command = args.shift() // Optional: cjs, esm, web
   // const { name } = JSON.parse(await fs.readFile('./package.json'))
   const name = 'zxel'
 
-  await fs.writeFile('index.ts',
-    (await fs.readFile('index.ts', 'utf8'))
+  const entryFile = 'src/index.ts'
+  await fs.writeFile(entryFile,
+    (await fs.readFile(entryFile, 'utf8'))
       .replace(/const version = '[0-9]+\.[0-9]+\.[0-9]+'/, `const version = '${version}'`)
   )
 
@@ -47,7 +48,7 @@ if (isDev) command = args.shift() // Optional: cjs, esm, web
     delete esbuildOptions.outfile
 
     Object.assign(esbuildOptions, {
-      entryPoints: ['./index.ts'],
+      entryPoints: ['./src/**/*.ts'],
       outdir: './build/cjs',
       format: 'cjs',
       platform: 'node',
@@ -60,7 +61,7 @@ if (isDev) command = args.shift() // Optional: cjs, esm, web
     delete esbuildOptions.outfile
 
     Object.assign(esbuildOptions, {
-      entryPoints: ['./index.ts'],
+      entryPoints: ['./src/**/*.ts'],
       outdir: './build/esm',
       format: 'esm',
       platform: 'node',

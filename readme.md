@@ -25,7 +25,7 @@ bunx zxel
 - [Keyboard shortcuts](#keyboard-shortcuts) similar to `readline`
 - Top-level `await`
 - Globals from [`zx`](https://google.github.io/zx/api)
-- Runs with Bun if installed
+- Runs with Bun or Deno if installed
 
 ## Environment
 
@@ -35,9 +35,15 @@ Assign variables on `this` to make it available for subsequent lines of code.
 this.a = 123
 ```
 
-Using `let` or `const` doesn't work because every line is evaluated in its own function scope.
+Then it can be used as a global variable.
 
-Global utilities like `fs` and `glob` are also defined on `this`.
+```js
+a + 456
+```
+
+Using `let` or `const` to define a variable doesn't work currently, because every line is evaluated in its own function scope. This might change in the future if the input code is parsed and processed.
+
+Global utilities like `fs` and `glob` are also defined on `this`. For example, to see a list:
 
 ```js
 Object.keys(this).sort()
@@ -69,11 +75,13 @@ Utilities from [`zx`](https://google.github.io/zx/api) are defined as global var
 - `os` - OS info from [`os`](https://nodejs.org/api/os.html)
 - `path` - Path utilities from [`path`](https://nodejs.org/api/path.html)
 
-Also [globals from Node](https://nodejs.org/api/globals.html), or [Bun](https://bun.sh/docs/api/globals) with [`Database`](https://bun.sh/docs/api/sqlite).
+Also [globals from Node](https://nodejs.org/api/globals.html); or [globals from Bun](https://bun.sh/docs/api/globals) with [`Database`](https://bun.sh/docs/api/sqlite) and `db`, a database instance at `~/.zxel/db.sqlite`.
+
+Modules can be dynamically imported with `await import()`.
 
 ## Keyboard shortcuts
 
-| Shortcut               | Comment                           |
+| Shortcut               | Action                            |
 | ---------------------- | --------------------------------- |
 | `Enter`                | Run code                          |
 | `Escape`               | Cancel                            |
