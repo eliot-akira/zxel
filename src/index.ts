@@ -6,7 +6,10 @@ import { prepareRuntime, runCode } from './runtime'
 import { prepareDatabase } from './db'
 import { startTerminal } from './terminal'
 
-const dirname = path.dirname(url.fileURLToPath(import.meta.url))
+const dirname =
+  typeof __dirname === 'string'
+    ? __dirname
+    : path.dirname(url.fileURLToPath(import.meta.url))
 
 async function getVersion() {
   // Find package.json - from src or build/esm
@@ -14,7 +17,7 @@ async function getVersion() {
   let version = (await fs.exists(packagePath))
     ? (await fs.readJson(packagePath)).version
     : (await fs.exists(
-          (packagePath = path.join(dirname, '..', '..', 'package.json'))
+          (packagePath = path.join(dirname, '..', '..', 'package.json')),
         ))
       ? (await fs.readJson(packagePath)).version
       : '0.0.0'

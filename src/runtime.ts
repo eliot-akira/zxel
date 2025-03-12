@@ -9,7 +9,7 @@ import { inspect } from './common'
 export const isBun: boolean = !!globalThis.Bun
 export const isDeno: boolean = !!globalThis.Deno
 export const isNode: boolean = Boolean(
-  globalThis.process?.versions?.node && !isBun
+  globalThis.process?.versions?.node && !isBun,
 )
 export const isBrowser: boolean = globalThis.window && !isDeno
 export let currentRuntime: 'bun' | 'deno' | 'node' | 'browser' | 'unknown'
@@ -31,7 +31,7 @@ switch (true) {
     break
 }
 export const runtimeValue = <T>(
-  v: Partial<{ bun: T; deno: T; node: T; browser: T; default: T }>
+  v: Partial<{ bun: T; deno: T; node: T; browser: T; default: T }>,
 ): T | undefined => v[currentRuntime] ?? v.default
 
 export const run = async (code: string) => {
@@ -55,7 +55,7 @@ export function runCode(code: string, timeout = 0) {
        * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements
        */
       const isExpression = !code.match(
-        /;|\n|const |for |if |let |var |while |try /g
+        /;|\n|const |for |if |let |var |while |try /g,
       )
 
       try {
@@ -141,10 +141,10 @@ export async function prepareRuntime() {
       if (Array.isArray(str)) {
         str = str.reduce(
           (prev, now, index) => prev + now + (args[index] ?? ''),
-          ''
+          '',
         )
       }
-      if (str==='~') {
+      if (str === '~') {
         str = home
       } else if (str.startsWith('~/')) {
         str = str.replace(/^~\//, home + '/')

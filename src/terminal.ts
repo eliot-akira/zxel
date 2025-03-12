@@ -90,7 +90,7 @@ export async function startTerminal({ version, history = [], pushHistory }) {
 
   function calculateCursorPosition(
     index: number = bufferCursorIndex,
-    relative: boolean = false
+    relative: boolean = false,
   ): {
     x: number
     y: number
@@ -140,7 +140,7 @@ export async function startTerminal({ version, history = [], pushHistory }) {
       1, // startPosition.x,
       startPosition.y,
       term.width,
-      endPosition.y - startPosition.y + 1
+      endPosition.y - startPosition.y + 1,
     )
 
     term.moveTo(startPosition.x, startPosition.y)
@@ -367,7 +367,7 @@ Documentation: https://github.com/eliot-akira/zxel`)
         // Backward one word
         if (bufferCursorIndex > 0) {
           const match = /([\w_-]+|\s+|[^A-Za-z0-9_\s]+)$/.exec(
-            buffer.slice(0, bufferCursorIndex) // Match to the left only
+            buffer.slice(0, bufferCursorIndex), // Match to the left only
           )
           if (match) {
             bufferCursorIndex = match.index
@@ -386,7 +386,7 @@ Documentation: https://github.com/eliot-akira/zxel`)
         {
           let currentIndex = bufferCursorIndex
           const match = /^([\w_-]+|\s+|[^A-Za-z0-9_\s]+)/d.exec(
-            buffer.slice(bufferCursorIndex) // Match to the right only
+            buffer.slice(bufferCursorIndex), // Match to the right only
           )
           if (match && match.indices && match.indices[0]) {
             // log(`FIND END OF WORD: ${JSON.stringify(match.indices)}\nFrom: ${buffer.slice(match.index)}\n`)
