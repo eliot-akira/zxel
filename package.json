@@ -1,6 +1,6 @@
 {
   "name": "zxel",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Interactive terminal shell for JavaScript runtimes with syntax highlight and zx utilities",
   "repository": {
     "type": "git",
